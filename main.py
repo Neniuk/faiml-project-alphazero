@@ -7,8 +7,6 @@ from othello.OthelloGame import OthelloGame as Game
 from othello.pytorch.NNet import NNetWrapper as nn
 from utils import *
 
-from chess.ChessGame import ChessGame
-from chess.pytorch.NNet import ChessNNWrapper as nn
 
 
 log = logging.getLogger(__name__)
