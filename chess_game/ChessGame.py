@@ -42,11 +42,26 @@ class ChessGame(Game):
         return board, -player
 
     def index_to_move(self, index):
-        from_square = (index // 64) % 64
+        from_square = index // 64
         to_square = index % 64
         promotion_index = (index // 4096) % 5
         promotion = {0: '', 1: 'q', 2: 'r', 3: 'b', 4: 'n'}[promotion_index]
         move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square] + promotion
+
+        # Handle castling moves
+        if from_square == chess.E1 and to_square == chess.G1:
+            move_uci = "e1g1"  # Kingside castling for white
+        elif from_square == chess.E1 and to_square == chess.C1:
+            move_uci = "e1c1"  # Queenside castling for white
+        elif from_square == chess.E8 and to_square == chess.G8:
+            move_uci = "e8g8"  # Kingside castling for black
+        elif from_square == chess.E8 and to_square == chess.C8:
+            move_uci = "e8c8"  # Queenside castling for black
+
+        # Handle en passant moves
+        if promotion == '' and abs(from_square - to_square) in [7, 9] and (chess.square_rank(to_square) in [2, 5]):
+            move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square]
+
         logging.info(f"Generated move UCI: {move_uci} for index: {index}")
         return chess.Move.from_uci(move_uci)
 
@@ -58,17 +73,37 @@ class ChessGame(Game):
     def getValidMoves(self, board, player):
         valid_moves = [0] * self.getActionSize()
         for move in board.legal_moves:
-            idx = self.move_to_index(move)
+            idx = self.move_to_index(board, move)
             valid_moves[idx] = 1
         return valid_moves
     
-    def move_to_index(self, move):
+    def move_to_index(self, board, move):
         # Convert the move to an index
         move_uci = move.uci()
         from_square = chess.SQUARE_NAMES.index(move_uci[:2])
         to_square = chess.SQUARE_NAMES.index(move_uci[2:4])
         promotion = move_uci[4:] if len(move_uci) > 4 else ''
         promotion_index = {'': 0, 'q': 1, 'r': 2, 'b': 3, 'n': 4}.get(promotion, 0)
+
+        # Handle castling moves
+        if move in [chess.Move.from_uci("e1g1"), chess.Move.from_uci("e1c1"), chess.Move.from_uci("e8g8"), chess.Move.from_uci("e8c8")]:
+            if move == chess.Move.from_uci("e1g1"):
+                from_square = chess.E1
+                to_square = chess.G1
+            elif move == chess.Move.from_uci("e1c1"):
+                from_square = chess.E1
+                to_square = chess.C1
+            elif move == chess.Move.from_uci("e8g8"):
+                from_square = chess.E8
+                to_square = chess.G8
+            elif move == chess.Move.from_uci("e8c8"):
+                from_square = chess.E8
+                to_square = chess.C8
+
+        # Handle en passant moves
+        if board.is_en_passant(move):
+            to_square = move.to_square
+
         return from_square * 64 + to_square + promotion_index * 4096
 
     def getGameEnded(self, board, player):
