@@ -1,5 +1,6 @@
 from Game import Game
-import chess  # Use python-chess library for logic
+import chess
+import numpy as np
 
 class ChessGame(Game):
     def getInitBoard(self):
@@ -31,3 +32,12 @@ class ChessGame(Game):
 
     def stringRepresentation(self, board):
         return board.fen()  # Use FEN for serialization
+
+    def boardToTensor(self, board):
+        piece_map = board.piece_map()
+        tensor = np.zeros((12, 8, 8), dtype=np.float32)
+        for square, piece in piece_map.items():
+            piece_type = piece.piece_type - 1
+            color = 0 if piece.color else 6
+            tensor[color + piece_type, square // 8, square % 8] = 1
+        return tensor
