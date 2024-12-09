@@ -35,10 +35,7 @@ class ChessGame(Game):
         if board is None:
             raise ValueError("Board is None in getNextState")
         move = self.index_to_move(action)
-        logging.info(f"Generated move: {move.uci()} for action: {action}")
-        logging.info(f"Board before move:\n{board}")
         board.push(move)
-        logging.info(f"Board after move:\n{board}")
         return board, -player
 
     def index_to_move(self, index):
@@ -46,6 +43,11 @@ class ChessGame(Game):
         to_square = index % 64
         promotion_index = (index // 4096) % 5
         promotion = {0: '', 1: 'q', 2: 'r', 3: 'b', 4: 'n'}[promotion_index]
+
+        # Validate the indices
+        if from_square >= len(chess.SQUARE_NAMES) or to_square >= len(chess.SQUARE_NAMES):
+            raise IndexError(f"Invalid action index: {index}. from_square: {from_square}, to_square: {to_square}")
+
         move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square] + promotion
 
         # Handle castling moves
@@ -57,10 +59,6 @@ class ChessGame(Game):
             move_uci = "e8g8"  # Kingside castling for black
         elif from_square == chess.E8 and to_square == chess.C8:
             move_uci = "e8c8"  # Queenside castling for black
-
-        # Handle en passant moves
-        if promotion == '' and abs(from_square - to_square) in [7, 9] and (chess.square_rank(to_square) in [2, 5]):
-            move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square]
 
         logging.info(f"Generated move UCI: {move_uci} for index: {index}")
         return chess.Move.from_uci(move_uci)

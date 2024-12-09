@@ -26,30 +26,14 @@ class MCTS():
         self.Vs = {}  # stores game.getValidMoves for board s
 
     def getActionProb(self, canonicalBoard, temp=1):
-        """
-        This function performs numMCTSSims simulations of MCTS starting from
-        canonicalBoard.
-
-        Returns:
-            probs: a policy vector where the probability of the ith action is
-                   proportional to Nsa[(s,a)]**(1./temp)
-        """
         for i in range(self.args.numMCTSSims):
             self.search(canonicalBoard)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
-        if temp == 0:
-            bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
-            bestA = np.random.choice(bestAs)
-            probs = [0] * len(counts)
-            probs[bestA] = 1
-            return probs
-
         counts_sum = float(sum(counts))
         if counts_sum == 0:
-            # Handle the case where counts_sum is zero
             log.error("counts_sum is zero, returning uniform probabilities")
             probs = [1 / len(counts) for _ in counts]
         else:
