@@ -47,12 +47,21 @@ class Coach():
         """
         trainExamples = []
         board = self.game.getInitBoard()
+        if board is None:
+            raise ValueError("Board is None in executeEpisode at start")
+        else:
+            print("BOARD")
+            print(board)
+            print()
+        
         self.curPlayer = 1
         episodeStep = 0
 
         while True:
             episodeStep += 1
             canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
+            if canonicalBoard is None:
+                raise ValueError(f"Canonical board is None at step {episodeStep}")
             temp = int(episodeStep < self.args.tempThreshold)
 
             pi = self.mcts.getActionProb(canonicalBoard, temp=temp)

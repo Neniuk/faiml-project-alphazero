@@ -14,6 +14,8 @@ class ChessGame(Game):
         return 4672  # Number of legal moves in chess
 
     def getNextState(self, board, player, action):
+        if board is None:
+            raise ValueError("Board is None in getNextState")
         board.push(action)
         return board, -player
 
@@ -31,7 +33,10 @@ class ChessGame(Game):
         return None
 
     def stringRepresentation(self, board):
-        return board.fen()  # Use FEN for serialization
+        if board is not None:
+            return board.fen()  # Use FEN for serialization
+        else:
+            raise ValueError("Board is None")
 
     def boardToTensor(self, board):
         piece_map = board.piece_map()
