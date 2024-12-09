@@ -47,9 +47,13 @@ class MCTS():
             probs[bestA] = 1
             return probs
 
-        counts = [x ** (1. / temp) for x in counts]
         counts_sum = float(sum(counts))
-        probs = [x / counts_sum for x in counts]
+        if counts_sum == 0:
+            # Handle the case where counts_sum is zero
+            log.error("counts_sum is zero, returning uniform probabilities")
+            probs = [1 / len(counts) for _ in counts]
+        else:
+            probs = [x / counts_sum for x in counts]
         return probs
 
     def search(self, canonicalBoard):

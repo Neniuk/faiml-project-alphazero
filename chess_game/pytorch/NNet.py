@@ -28,6 +28,7 @@ class NNetWrapper(NeuralNet):
         self.nnet = cnnet(game, args)  # Use ChessNNet
         self.board_x, self.board_y = game.getBoardSize()  # Board size (8x8 for chess)
         self.action_size = game.getActionSize()  # Get action size (number of legal moves in chess)
+        self.game = game
 
         if args.cuda:
             self.nnet.cuda()
@@ -82,9 +83,11 @@ class NNetWrapper(NeuralNet):
         start = time.time()
 
         # preparing input
+        # Board to tensor
+        board = self.game.boardToTensor(board)
         board = torch.FloatTensor(board.astype(np.float64))
         if args.cuda: board = board.contiguous().cuda()
-        board = board.view(1, self.board_x, self.board_y)
+        board = board.view(1, 12, self.board_x, self.board_y)
         self.nnet.eval()
         with torch.no_grad():
             pi, v = self.nnet(board)
