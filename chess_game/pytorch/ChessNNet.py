@@ -1,43 +1,41 @@
-import sys
-sys.path.append('..')
-from utils import *
-
-import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import chess  # Using python-chess for chess logic
 
-class OthelloNNet(nn.Module):
+class ChessNNet(nn.Module):
     def __init__(self, game, args):
-        # game params
+        # Game parameters
         self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
         self.args = args
 
-        super(OthelloNNet, self).__init__()
+        super(ChessNNet, self).__init__()
+        # Convolutional layers (adapted for 8x8 chess board)
         self.conv1 = nn.Conv2d(1, args.num_channels, 3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1)
         self.conv4 = nn.Conv2d(args.num_channels, args.num_channels, 3, stride=1)
 
+        # Batch Normalization layers
         self.bn1 = nn.BatchNorm2d(args.num_channels)
         self.bn2 = nn.BatchNorm2d(args.num_channels)
         self.bn3 = nn.BatchNorm2d(args.num_channels)
         self.bn4 = nn.BatchNorm2d(args.num_channels)
 
+        # Fully connected layers
         self.fc1 = nn.Linear(args.num_channels*(self.board_x-4)*(self.board_y-4), 1024)
         self.fc_bn1 = nn.BatchNorm1d(1024)
 
         self.fc2 = nn.Linear(1024, 512)
         self.fc_bn2 = nn.BatchNorm1d(512)
 
-        self.fc3 = nn.Linear(512, self.action_size)
-
-        self.fc4 = nn.Linear(512, 1)
+        self.fc3 = nn.Linear(512, self.action_size)  # For policy head
+        self.fc4 = nn.Linear(512, 1)  # For value head
 
     def forward(self, s):
-        #                                                           s: batch_size x board_x x board_y
+        # s: batch_size x board_x x board_y (8x8 chess board)
         s = s.view(-1, 1, self.board_x, self.board_y)                # batch_size x 1 x board_x x board_y
         s = F.relu(self.bn1(self.conv1(s)))                          # batch_size x num_channels x board_x x board_y
         s = F.relu(self.bn2(self.conv2(s)))                          # batch_size x num_channels x board_x x board_y
