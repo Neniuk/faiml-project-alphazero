@@ -50,7 +50,7 @@ class Coach():
         if board is None:
             raise ValueError("Board is None in executeEpisode at start")
         else:
-            print("BOARD")
+            print("INITIAL BOARD")
             print(board)
             print()
         
@@ -70,7 +70,14 @@ class Coach():
                 trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
+            log.info(f"Player {self.curPlayer}, action: {action}")
             board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action)
+            if board is None:
+                raise ValueError(f"Board is None in executeEpisode at step {episodeStep}")
+            else:
+                print(f"BOARD AFTER STEP {episodeStep}")
+                print(board)
+                print()
 
             r = self.game.getGameEnded(board, self.curPlayer)
 
