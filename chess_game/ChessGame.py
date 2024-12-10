@@ -36,6 +36,9 @@ class ChessGame(Game):
             raise ValueError("Board is None in getNextState")
         move = self.index_to_move(action)
         board.push(move)
+        print("BOARD AFTER MOVE")
+        print(board)
+        print()
         return board, -player
 
     def index_to_move(self, index):
@@ -63,15 +66,13 @@ class ChessGame(Game):
         elif from_square == chess.E8 and to_square == chess.C8:
             move_uci = "e8c8"  # Queenside castling for black
 
-        logging.info(f"Generated move UCI: {move_uci} for index: {index}")
+        # logging.info(f"Generated move UCI: {move_uci} for index: {index}")
         move = chess.Move.from_uci(move_uci)
-        logging.info(f"Move object: {move}")
+        # logging.info(f"Move object: {move}")
         return move
 
     def getCanonicalForm(self, board, player):
-        if player == 1:
-            return board
-        return board.mirror()
+        return board
 
     def getValidMoves(self, board, player):
         valid_moves = [0] * self.getActionSize()

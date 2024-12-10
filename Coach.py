@@ -62,15 +62,20 @@ class Coach():
             canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
             if canonicalBoard is None:
                 raise ValueError(f"Canonical board is None at step {episodeStep}")
+            print(f"CANONICAL BOARD AT STEP {episodeStep}")
+            print(canonicalBoard)
+            print()
+
             temp = int(episodeStep < self.args.tempThreshold)
 
-            pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
-            sym = self.game.getSymmetries(canonicalBoard, pi)
+            canonical_board_copy = canonicalBoard.copy()
+            pi = self.mcts.getActionProb(canonical_board_copy, temp=temp)
+            sym = self.game.getSymmetries(canonical_board_copy, pi)
             for b, p in sym:
                 trainExamples.append([b, self.curPlayer, p, None])
 
             action = np.random.choice(len(pi), p=pi)
-            log.info(f"Player {self.curPlayer}, action: {action}")
+            log.info(f"Player {self.curPlayer}, action (index): {action}, action (move): {self.game.index_to_move(action)}")
             board, self.curPlayer = self.game.getNextState(board, self.curPlayer, action)
             if board is None:
                 raise ValueError(f"Board is None in executeEpisode at step {episodeStep}")
@@ -132,7 +137,7 @@ class Coach():
             log.info('PITTING AGAINST PREVIOUS VERSION')
             arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
                           lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
-            pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
+            pwins, nwins, draws = arena.playGames(self.args.arenaCompare, verbose=True)
 
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
             if pwins + nwins == 0 or float(nwins) / (pwins + nwins) < self.args.updateThreshold:
