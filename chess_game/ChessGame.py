@@ -46,6 +46,11 @@ class ChessGame(Game):
         to_square = index % 64
         promotion_index = (index // 4096) % 5
         promotion = {0: '', 1: 'q', 2: 'r', 3: 'b', 4: 'n'}[promotion_index]
+
+        # Ensure from_square and to_square are within valid range
+        if from_square < 0 or from_square >= 64 or to_square < 0 or to_square >= 64:
+            raise ValueError(f"Invalid square index: from_square={from_square}, to_square={to_square}")
+
         move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square] + promotion
 
         # Handle castling moves
@@ -63,7 +68,9 @@ class ChessGame(Game):
             move_uci = chess.SQUARE_NAMES[from_square] + chess.SQUARE_NAMES[to_square]
 
         logging.info(f"Generated move UCI: {move_uci} for index: {index}")
-        return chess.Move.from_uci(move_uci)
+        move = chess.Move.from_uci(move_uci)
+        logging.info(f"Move object: {move}")
+        return move
 
     def getCanonicalForm(self, board, player):
         if player == 1:
